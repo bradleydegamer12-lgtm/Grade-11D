@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SowetoLearn — Education Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e0e0e;
+  --surface: #181818;
+  --surface-raised: #222222;
+  --accent: #e07b39;
+  --accent-light: #f4a261;
+  --accent-glow: rgba(224,123,57,0.15);
+  --gold: #d4a843;
+  --gold-light: #f0d48a;
+  --sage: #7a9e7e;
+  --sage-light: #a8c5ab;
+  --cream: #f0ece4;
+  --text-primary: #f0ece4;
+  --text-muted: #8a8580;
+  --text-dim: #5a5550;
+  --border: #2a2a2a;
+  --error: #d94f4f;
+  --success: #4f9d69;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font-display: 'DM Serif Display', serif;
+  --font-body: 'Lora', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grain overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 3px; }
+
+/* ===== AUTH OVERLAY ===== */
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.auth-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.auth-overlay::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -30%;
+  width: 80vw;
+  height: 80vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  animation: authGlow 8s ease-in-out infinite;
+}
+
+@keyframes authGlow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(10%, 5%) scale(1.1); }
+}
+
+.auth-card {
+  position: relative;
+  width: 420px;
+  max-width: 92vw;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 48px 40px;
+  animation: slideUp 0.6s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-logo {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.auth-logo span { color: var(--gold); }
+
+.auth-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+  letter-spacing: 0.04em;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 12px 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.auth-tab.active { color: var(--accent); }
+
+.auth-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+}
+
+.auth-form { display: none; flex-direction: column; gap: 16px; }
+.auth-form.active { display: flex; }
+
+.field-group { display: flex; flex-direction: column; gap: 6px; }
+
+.field-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.field-input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.field-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.field-input::placeholder { color: var(--text-dim); }
+
+.field-row { display: flex; gap: 12px; }
+.field-row .field-group { flex: 1; }
+
+.auth-btn {
+  margin-top: 8px;
+  padding: 16px;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s ease, letter-spacing 0.3s ease, transform 0.15s ease;
+}
+
+.auth-btn:hover {
+  background: var(--accent-light);
+  letter-spacing: 0.18em;
+}
+
+.auth-btn:active { transform: scale(0.98); }
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+
+.auth-divider::before, .auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.social-row {
+  display: flex;
+  gap: 12px;
+}
+
+.social-btn {
+  flex: 1;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: border-color 0.3s ease, color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.social-btn:hover {
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+}
+
+.auth-footer {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.auth-footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* ===== MAIN APP ===== */
+.app {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.app.visible { display: block; opacity: 1; }
+
+/* ===== NAVBAR ===== */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px;
+  height: 64px;
+  background: rgba(14,14,14,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-brand {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--accent);
+}
+
+.nav-brand span { color: var(--gold); }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-link {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  background: none;
+  border: none;
+}
+
+.nav-link:hover, .nav-link.active { color: var(--accent); }
+
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--gold));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--bg);
+}
+
+.nav-logout {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.nav-logout:hover {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+/* ===== HERO ===== */
+.hero {
+  position: relative;
+  padding: 100px 48px 80px;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  right: -100px;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -150px;
+  left: -50px;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,168,67,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: 1.1;
+  color: var(--cream);
+  max-width: 700px;
+  margin-bottom: 20px;
+}
+
+.hero-title em { color: var(--gold); font-style: italic; }
+
+.hero-desc {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  max-width: 520px;
+  margin-bottom: 36px;
+}
+
+/* ===== SEARCH ===== */
+.search-container {
+  position: relative;
+  max-width: 600px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 18px 56px 18px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-glow);
+}
+
+.search-input::placeholder { color: var(--text-dim); }
+
+.search-icon {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search-results-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  max-height: 400px;
+  overflow-y: auto;
+  display: none;
+  z-index: 50;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.search-results-dropdown.open { display: block; }
+
+.search-result-item {
+  padding: 14px 24px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: var(--surface-raised); }
+
+.sr-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.sr-text { flex: 1; }
+
+.sr-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.sr-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+/* ===== STATS BAR ===== */
+.stats-bar {
+  display: flex;
+  gap: 1px;
+  background: var(--border);
+  margin: 0 48px;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.stat-item {
+  flex: 1;
+  background: var(--surface);
+  padding: 28px 32px;
+  text-align: center;
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 32px;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* ===== SECTIONS ===== */
+.section {
+  padding: 80px 48px;
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 48px;
+}
+
+.section-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3vw, 40px);
+  color: var(--cream);
+}
+
+/* ===== GRADE FILTER ===== */
+.grade-filter {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.grade-chip {
+  padding: 8px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.grade-chip:hover { border-color: var(--text-muted); color: var(--text-primary); }
+
+.grade-chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+/* ===== SUBJECT GRID ===== */
+.subject-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.subject-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  opacity: 0;
+  animation: fadeUp 0.6s ease forwards;
+}
+
+.subject-card:nth-child(1) { animation-delay: 0.05s; }
+.subject-card:nth-child(2) { animation-delay: 0.1s; }
+.subject-card:nth-child(3) { animation-delay: 0.15s; }
+.subject-card:nth-child(4) { animation-delay: 0.2s; }
+.subject-card:nth-child(5) { animation-delay: 0.25s; }
+.subject-card:nth-child(6) { animation-delay: 0.3s; }
+.subject-card:nth-child(7) { animation-delay: 0.35s; }
+.subject-card:nth-child(8) { animation-delay: 0.4s; }
+.subject-card:nth-child(9) { animation-delay: 0.45s; }
+.subject-card:nth-child(10) { animation-delay: 0.5s; }
+.subject-card:nth-child(11) { animation-delay: 0.55s; }
+.subject-card:nth-child(12) { animation-delay: 0.6s; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.subject-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--card-accent, var(--accent));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.subject-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--card-accent, var(--accent));
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+
+.subject-card:hover::before { opacity: 1; }
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: 20px;
+  background: var(--icon-bg, var(--accent-glow));
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--cream);
+  margin-bottom: 8px;
+}
+
+.card-desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.card-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.topic-tag {
+  padding: 4px 12px;
+  background: var(--bg);
+  border-radius: 50px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  color: var(--text-dim);
+  transition: color 0.3s ease, background 0.3s ease;
+  cursor: pointer;
+}
+
+.topic-tag:hover {
+  background: var(--card-accent, var(--accent));
+  color: var(--bg);
+}
+
+.card-count {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+
+/* ===== TOPIC DETAIL MODAL ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 680px;
+  max-width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 40px;
+  animation: modalIn 0.4s ease;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-close {
+  float: right;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.modal-close:hover { border-color: var(--error); color: var(--error); }
+
+.modal-subject-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--cream);
+  margin-bottom: 20px;
+  padding-right: 50px;
+}
+
+.modal-body { display: flex; flex-direction: column; gap: 20px; }
+
+.modal-section-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.modal-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.modal-learn-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-learn-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.modal-learn-list li::before {
+  content: '▸';
+  color: var(--accent);
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.modal-resources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.modal-resource-btn {
+  padding: 10px 20px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-resource-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ===== SOWETO MAP SECTION ===== */
+.map-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 0 48px 80px;
+  padding: 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.map-visual {
+  aspect-ratio: 1;
+  background: var(--bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-pin {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-glow), 0 0 20px var(--accent-glow);
+  animation: ping 2s ease-in-out infinite;
+}
+
+.map-pin:nth-child(1) { top: 30%; left: 40%; animation-delay: 0s; }
+.map-pin:nth-child(2) { top: 50%; left: 60%; animation-delay: 0.5s; }
+.map-pin:nth-child(3) { top: 65%; left: 35%; animation-delay: 1s; }
+.map-pin:nth-child(4) { top: 40%; left: 70%; animation-delay: 1.5s; }
+.map-pin:nth-child(5) { top: 55%; left: 45%; animation-delay: 0.3s; }
+
+@keyframes ping {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.7; }
+}
+
+.map-label {
+  font-family: var(--font-display);
+  font-size: 48px;
+  color: var(--text-dim);
+  letter-spacing: -0.02em;
+}
+
+.map-content h3 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--cream);
+  margin-bottom: 16px;
+}
+
+.map-content p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.school-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.school-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  transition: border-color 0.3s ease;
+}
+
+.school-item:hover { border-color: var(--accent); }
+
+.school-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sage);
+  flex-shrink: 0;
+}
+
+.school-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.school-type {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+
+/* ===== FOOTER ===== */
+.footer {
+  padding: 48px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-brand {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--accent);
+}
+
+.footer-brand span { color: var(--gold); }
+
+.footer-copy {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.03em;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .navbar { padding: 0 20px; }
+  .hero { padding: 60px 24px 50px; }
+  .stats-bar { margin: 0 24px; flex-direction: column; }
+  .section { padding: 50px 24px; }
+  .subject-grid { grid-template-columns: 1fr; }
+  .map-section { margin: 0 24px 50px; grid-template-columns: 1fr; padding: 32px; }
+  .footer { padding: 32px 24px; flex-direction: column; gap: 12px; text-align: center; }
+  .nav-links { display: none; }
+  .auth-card { padding: 32px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== AUTH OVERLAY ===== -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card">
+    <div class="auth-logo">Soweto<span>Learn</span></div>
+    <div class="auth-subtitle">Empowering Soweto classrooms — CAPS aligned resources for every grade</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" data-tab="signup" onclick="switchAuthTab('signup')">Create Account</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form class="auth-form active" id="loginForm" onsubmit="handleAuth(event, 'login')">
+      <div class="field-group">
+        <label class="field-label">Email Address</label>
+        <input class="field-input" type="email" placeholder="teacher@soweto.edu.za" required>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <input class="field-input" type="password" placeholder="Enter your password" required>
+      </div>
+      <button class="auth-btn" type="submit">Sign In</button>
+      <div class="auth-divider">or continue with</div>
+      <div class="social-row">
+        <button type="button" class="social-btn" onclick="handleAuth(event,'social')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
+          Google
+        </button>
+        <button type="button" class="social-btn" onclick="handleAuth(event,'social')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          Microsoft
+        </button>
+      </div>
+      <div class="auth-footer">Forgot your password? <a href="#">Reset it here</a></div>
+    </form>
+
+    <!-- SIGNUP FORM -->
+    <form class="auth-form" id="signupForm" onsubmit="handleAuth(event, 'signup')">
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">First Name</label>
+          <input class="field-input" type="text" placeholder="Thandi" required>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Last Name</label>
+          <input class="field-input" type="text" placeholder="Mokoena" required>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Email Address</label>
+        <input class="field-input" type="email" placeholder="you@example.com" required>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Role</label>
+        <select class="field-input" required>
+          <option value="">Select your role</option>
+          <option value="teacher">Teacher</option>
+          <option value="learner">Learner</option>
+          <option value="parent">Parent / Guardian</option>
+          <option value="admin">School Admin</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Grade Level</label>
+        <select class="field-input" required>
+          <option value="">Select grade</option>
+          <option>R (Reception)</option>
+          <option>Grade 1</option>
+          <option>Grade 2</option>
+          <option>Grade 3</option>
+          <option>Grade 4</option>
+          <option>Grade 5</option>
+          <option>Grade 6</option>
+          <option>Grade 7</option>
+          <option>Grade 8</option>
+          <option>Grade 9</option>
+          <option>Grade 10</option>
+          <option>Grade 11</option>
+          <option>Grade 12</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <input class="field-input" type="password" placeholder="Minimum 8 characters" required minlength="8">
+      </div>
+      <button class="auth-btn" type="submit">Create Account</button>
+      <div class="auth-footer">Already have an account? <a href="#" onclick="switchAuthTab('login'); return false;">Sign in</a></div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== MAIN APPLICATION ===== -->
+<div class="app" id="mainApp">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-brand">Soweto<span>Learn</span></div>
+    <ul class="nav-links">
+      <li><button class="nav-link active" onclick="scrollToSection('subjects')">Subjects</button></li>
+      <li><button class="nav-link" onclick="scrollToSection('schools')">Schools</button></li>
+      <li><button class="nav-link" onclick="scrollToSection('about')">About</button></li>
+    </ul>
+    <div class="nav-user">
+      <div class="nav-avatar" id="userAvatar">TM</div>
+      <button class="nav-logout" onclick="logout()">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-eyebrow">Soweto Education Hub — CAPS Aligned</div>
+    <h1 class="hero-title">Learn smarter, <em>Soweto.</em><br>Every subject. Every grade.</h1>
+    <p class="hero-desc">Browse CAPS-aligned topics across all subjects from Grade R to Grade 12. Built for Soweto teachers, learners, and parents — because world-class education starts in our classrooms.</p>
+    <div class="search-container">
+      <input class="search-input" id="globalSearch" type="text" placeholder="Search topics — e.g. 'fractions', 'photosynthesis', 'Shakespeare'..." oninput="handleSearch(this.value)" onfocus="handleSearch(this.value)" onblur="setTimeout(()=>closeSearch(),200)">
+      <span class="search-icon">&#x1F50D;</span>
+      <div class="search-results-dropdown" id="searchDropdown"></div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-value">14</div>
+      <div class="stat-label">Subjects Available</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">130+</div>
+      <div class="stat-label">Topics Covered</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">R–12</div>
+      <div class="stat-label">All Grades</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">100%</div>
+      <div class="stat-label">CAPS Aligned</div>
+    </div>
+  </div>
+
+  <!-- SUBJECTS SECTION -->
+  <section class="section" id="subjects">
+    <div class="section-header">
+      <div>
+        <div class="section-tag">Browse by Subject</div>
+        <h2 class="section-title">All CAPS Subjects</h2>
+      </div>
+      <div class="grade-filter" id="gradeFilter">
+        <button class="grade-chip active" onclick="filterByGrade('all', this)">All Grades</button>
+        <button class="grade-chip" onclick="filterByGrade('foundation', this)">R–3</button>
+        <button class="grade-chip" onclick="filterByGrade('intermediate', this)">4–6</button>
+        <button class="grade-chip" onclick="filterByGrade('senior', this)">7–9</button>
+        <button class="grade-chip" onclick="filterByGrade('fet', this)">10–12</button>
+      </div>
+    </div>
+    <div class="subject-grid" id="subjectGrid"></div>
+  </section>
+
+  <!-- SOWETO SCHOOLS -->
+  <div class="map-section" id="schools">
+    <div class="map-visual">
+      <div class="map-pin"></div>
+      <div class="map-pin"></div>
+      <div class="map-pin"></div>
+      <div class="map-pin"></div>
+      <div class="map-pin"></div>
+      <div class="map-label">SOWETO</div>
+    </div>
+    <div class="map-content">
+      <h3>Schools in Soweto</h3>
+      <p>Soweto is home to dozens of public primary and secondary schools serving thousands of learners. These schools follow the national CAPS curriculum, and this platform is designed to support teachers and learners in every one of them.</p>
+      <ul class="school-list">
+        <li class="school-item">
+          <div class="school-dot"></div>
+          <div>
+            <div class="school-name">Orlando West High School</div>
+            <div class="school-type">Secondary — Grades 8–12</div>
+          </div>
+        </li>
+        <li class="school-item">
+          <div class="school-dot"></div>
+          <div>
+            <div class="school-name">Phefeni Senior Secondary</div>
+            <div class="school-type">Secondary — Grades 8–12</div>
+          </div>
+        </li>
+        <li class="school-item">
+          <div class="school-dot"></div>
+          <div>
+            <div class="school-name">Dobsonville Primary School</div>
+            <div class="school-type">Primary — Grade R–7</div>
+          </div>
+        </li>
+        <li class="school-item">
+          <div class="school-dot"></div>
+          <div>
+            <div class="school-name">Meadowlands Primary</div>
+            <div class="school-type">Primary — Grade R–7</div>
+          </div>
+        </li>
+        <li class="school-item">
+          <div class="school-dot"></div>
+          <div>
+            <div class="school-name">M🇿🇦kereke Combined School</div>
+            <div class="school-type">Combined — Grade R–12</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer" id="about">
+    <div class="footer-brand">Soweto<span>Learn</span></div>
+    <div class="footer-copy">Built for Soweto classrooms. CAPS-aligned. Free for all educators. &copy; 2026</div>
+  </footer>
+
+</div>
+
+<!-- TOPIC DETAIL MODAL -->
+<div class="modal-overlay" id="topicModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div class="modal-subject-tag" id="modalSubject"></div>
+    <h2 class="modal-title" id="modalTitle"></h2>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ===== SUBJECT & TOPIC DATA =====
+const subjects = [
+  {
+    id: 'eng-hl', name: 'English Home Language', icon: '📖', phases: ['foundation','intermediate','senior','fet'],
+    color: '#5b8def', bg: 'rgba(91,141,239,0.1)',
+    desc: 'Reading, writing, speaking, and literature across all phases.',
+    topics: [
+      { name: 'Phonics & Phonemic Awareness', grade: 'R–2', desc: 'Letter-sound relationships, blending, segmenting, and decoding words.', learn: ['Identify letter sounds and blends','Blend sounds to form words','Segment words into individual phonemes','Recognise high-frequency sight words'], resources: ['CAPS Foundation Phase Guidelines','Beads reading scheme','Classroom phonics games'] },
+      { name: 'Reading Comprehension', grade: 'R–12', desc: 'Understanding, interpreting, and analysing texts at increasing levels of complexity.', learn: ['Identify main ideas and supporting details','Make inferences from text','Compare and contrast information','Analyse author purpose and tone'], resources: ['Graded readers','Past NSC papers','Reading journal templates'] },
+      { name: 'Creative Writing', grade: '3–12', desc: 'Composing narratives, poetry, descriptions, and imaginative texts.', learn: ['Plan and structure stories with a clear beginning, middle, end','Use descriptive language and literary devices','Develop characters and settings','Write poetry using various forms'], resources: ['CAPS Creative Writing rubrics','Poetry anthologies','Story starter prompts'] },
+      { name: 'Grammar & Language Structures', grade: 'R–12', desc: 'Parts of speech, sentence construction, tenses, punctuation, and syntax.', learn: ['Identify parts of speech','Construct grammatically correct sentences','Use correct tenses and subject-verb agreement','Apply punctuation rules accurately'], resources: ['Oxford English Grammar handbook','CAPS language structure workbooks','Grammar worksheets'] },
+      { name: 'Shakespeare Study', grade: '10–12', desc: 'Close reading and analysis of Shakespearean plays and sonnets for NSC.', learn: ['Analyse themes of power, love, and identity in Shakespeare','Interpret figurative language and iambic pentameter','Compare Shakespearean language with modern English','Write analytical essays on dramatic techniques'], resources: ['Macbeth / Othello study guides','NSC exemplar essays','Royal Shakespeare Company digital resources'] },
+      { name: 'Visual Literacy', grade: '4–12', desc: 'Interpreting cartoons, advertisements, infographics, and media texts.', learn: ['Read and interpret visual texts','Identify bias, stereotypes, and propaganda','Analyse layout, font, and colour choices','Create own visual texts for specific audiences'], resources: ['CAPS visual literacy examples','Media literacy toolkit','Cartoon analysis worksheets'] },
+      { name: 'Transactional Writing', grade: '10–12', desc: 'Formal letters, reports, newspaper articles, speeches, and CVs.', learn: ['Write formal letters with correct format','Compose newspaper reports and articles','Draft professional CVs and cover letters','Prepare and deliver persuasive speeches'], resources: ['CAPS FET English guidelines','Transactional writing templates','Past NSC exemplar tasks'] }
+    ]
+  },
+  {
+    id: 'eng-fal', name: 'English First Additional Language', icon: '🌍', phases: ['foundation','intermediate','senior','fet'],
+    color: '#6bc5d2', bg: 'rgba(107,197,210,0.1)',
+    desc: 'English as an additional language — building fluency for academic and everyday use.',
+    topics: [
+      { name: 'Listening & Speaking', grade: 'R–3', desc: 'Developing oral fluency, pronunciation, and listening comprehension.', learn: ['Follow oral instructions accurately','Pronounce common English words clearly','Participate in short dialogues and conversations','Retell stories in sequence'], resources: ['CAPS FAL oral activities','Audio pronunciation guides','Storytelling circles'] },
+      { name: 'Basic Reading & Vocabulary', grade: 'R–3', desc: 'Building foundational vocabulary and early reading skills in English.', learn: ['Recognise and read common words','Build topic-based vocabulary lists','Read simple sentences and short paragraphs','Use a picture dictionary'], resources: ['Oxford First Bilingual Dictionary','Graded FAL readers','Flashcard sets'] },
+      { name: 'Paragraph & Essay Writing', grade: '7–12', desc: 'Writing structured paragraphs and essays with clear arguments.', learn: ['Write topic sentences and supporting details','Structure argumentative and discursive essays','Use linking words for coherence','Edit and proofread own writing'], resources: ['CAPS writing rubrics','Essay planning templates','Peer editing checklists'] }
+    ]
+  },
+  {
+    id: 'afrikaans-hl', name: 'Afrikaans Home Language', icon: '📝', phases: ['foundation','intermediate','senior','fet'],
+    color: '#e89b6d', bg: 'rgba(232,155,109,0.1)',
+    desc: 'Afrikaans lees, skryf, praat en letterkunde vir huistaal leerders.',
+    topics: [
+      { name: 'Leesbegrip (Reading Comprehension)', grade: 'R–12', desc: 'Verstaan en ontleed tekste in Afrikaans.', learn: ['Identifiseer hoofgedagtes en besonderhede','Maak afleidings uit die teks','Vergelyk verskillende tekste','Ontleed skrywer se doel en styl'], resources: ['CAPS Afrikaans HT riglyne','Leesboeke vir elke graad','Woordeskat lyste'] },
+      { name: 'Taalstrukture & Gebruik', grade: 'R–12', desc: 'Grammatika, woordsoorte, sinsoorte en taalreëls.', learn: ['Ken woordsoorte naamwoord, werkwoord, bywoord','Bou korrekte sinne met die regte woordorde','Gebruik werkwoorde in verskillende tye','Pas leestekens korrek toe'], resources: ['Afrikaanse grammatika handboeke','CAPS taalwerkvelle','Woordsoorte plakkate'] },
+      { name: 'Opstel & Kreatiewe Skryfwerk', grade: '3–12', desc: 'Skryf opstelle, verhale, gedigte en ander kreatiewe tekste.', learn: ['Skryf narratiewe en beskrywende opstelle','Gebruik literêre middele soos metafore','Struktureer n opstel met inleiding en slotsom','Skryf gedigte in verskillende vorme'], resources: ['CAPS skryfwerk rubrieke','Voorbeeld opstelle','Gedigversamelings'] }
+    ]
+  },
+  {
+    id: 'afrikaans-fal', name: 'Afrikaans First Additional Language', icon: '🗣️', phases: ['intermediate','senior','fet'],
+    color: '#d4a574', bg: 'rgba(212,165,116,0.1)',
+    desc: 'Afrikaans as an additional language — building communication skills.',
+    topics: [
+      { name: 'Gesprekke & Luister', grade: '4–12', desc: 'Oefen mondelinge Afrikaans en luisterbegrip.', learn: ['Voer kort gesprekke in Afrikaans','Verstaan basiese mondelinge instruksies','Praat oor bekende onderwerpe','Luister na stories en beantwoord vrae'], resources: ['CAPS FAL Mondeling riglyne','Gesprekkaarte','Oudio bronne'] },
+      { name: 'Lees & Woordeskat', grade: '4–12', desc: 'Bou woordeskat en leesvaardigheid in Afrikaans.', learn: ['Lees kort tekste met begrip','Brei woordeskat uit deur konteks','Gebruik n tweetalige woordeboek','Identifiseer kernwoorde in tekste'], resources: ['Tweetalige woordeboeke','Gegradeerde lesers','Woordeskat oefeninge'] }
+    ]
+  },
+  {
+    id: 'math', name: 'Mathematics', icon: '🔢', phases: ['foundation','intermediate','senior','fet'],
+    color: '#e07b39', bg: 'rgba(224,123,57,0.1)',
+    desc: 'Number sense, algebra, geometry, data handling, and mathematical reasoning.',
+    topics: [
+      { name: 'Number Sense & Place Value', grade: 'R–3', desc: 'Understanding numbers, counting, ordering, and place value.', learn: ['Count forwards and backwards to 1000','Understand units, tens, and hundreds','Compare and order numbers','Round numbers to nearest 10 and 100'], resources: ['CAPS Foundation Phase Maths','Number charts and blocks','Base-ten manipulatives'] },
+      { name: 'Addition & Subtraction', grade: 'R–4', desc: 'Building fluency with addition and subtraction facts and strategies.', learn: ['Recall addition and subtraction facts to 20','Use bridging through 10 strategy','Add and subtract 2- and 3-digit numbers','Solve one-step word problems'], resources: ['Maths workbooks','Number line activities','Flash cards'] },
+      { name: 'Multiplication & Division', grade: '3–7', desc: 'Times tables, long multiplication, division with remainders.', learn: ['Memorise times tables up to 12×12','Use long multiplication for larger numbers','Divide with and without remainders','Solve multi-step word problems'], resources: ['CAPS Intermediate Phase Maths','Times table grids','Division worksheets'] },
+      { name: 'Fractions, Decimals & Percentages', grade: '4–12', desc: 'Understanding rational numbers, equivalence, and operations.', learn: ['Identify and represent fractions on number lines','Convert between fractions, decimals, and percentages','Add, subtract, multiply, and divide fractions','Apply fractions to real-life contexts like discounts'], resources: ['Fraction wall posters','Decimal grids','CAPS graded exercises'] },
+      { name: 'Algebra & Equations', grade: '7–12', desc: 'Variables, expressions, equations, and algebraic problem solving.', learn: ['Simplify algebraic expressions','Solve linear equations and inequalities','Substitute values into formulae','Graph linear equations on the Cartesian plane'], resources: ['CAPS Senior Phase & FET Maths','Algebra tiles','Past NSC exam papers'] },
+      { name: 'Geometry & Measurement', grade: 'R–12', desc: 'Shapes, angles, area, perimeter, volume, and transformations.', learn: ['Identify and classify 2D and 3D shapes','Calculate area, perimeter, and volume','Measure and draw angles with a protractor','Understand transformations: reflection, rotation, translation'], resources: ['Geometric shape sets','Measurement tools','CAPS geometry worksheets'] },
+      { name: 'Data Handling & Probability', grade: '4–12', desc: 'Collecting, organising, representing, and interpreting data.', learn: ['Create bar graphs, pie charts, and line graphs','Calculate mean, median, mode, and range','Read and interpret tables and graphs','Understand basic probability and chance'], resources: ['CAPS data handling activities','Graph paper and templates','Survey projects'] },
+      { name: 'Trigonometry & Calculus (FET)', grade: '10–12', desc: 'Advanced topics for NSC Mathematics including trig, calculus, and sequences.', learn: ['Solve problems using sin, cos, and tan ratios','Differentiate and integrate basic functions','Work with arithmetic and geometric sequences','Apply analytical geometry techniques'], resources: ['CAPS FET Mathematics document','Scientific calculators','NSC past papers and memos'] }
+    ]
+  },
+  {
+    id: 'mathlit', name: 'Mathematical Literacy', icon: '📊', phases: ['fet'],
+    color: '#f4a261', bg: 'rgba(244,162,97,0.1)',
+    desc: 'Practical mathematics for real-life contexts — finances, measurement, maps, and data.',
+    topics: [
+      { name: 'Personal Finance', grade: '10–12', desc: 'Budgeting, banking, taxation, interest, and financial planning.', learn: ['Create and manage a personal budget','Calculate simple and compound interest','Understand income tax and UIF','Compare hire purchase, loans, and savings options'], resources: ['CAPS Mathematical Literacy','Financial literacy workbooks','Bank statement exercises'] },
+      { name: 'Measurement in Context', grade: '10–12', desc: 'Converting units, scale drawings, and practical measurement problems.', learn: ['Convert between metric units','Read and create scale drawings and maps','Calculate speed, distance, and time','Work with floor plans and recipes'], resources: ['CAPS Math Lit measurement tasks','Measuring instruments','Map activities'] },
+      { name: 'Maps, Plans & Representations', grade: '10–12', desc: 'Interpreting and using maps, floor plans, and graphical representations.', learn: ['Use coordinates and bearings on maps','Interpret contour lines and gradient','Read and analyse floor plans','Create and interpret scale models'], resources: ['Soweto area maps','Floor plan activities','Google Maps exercises'] }
+    ]
+  },
+  {
+    id: 'nat-sci', name: 'Natural Sciences', icon: '🔬', phases: ['intermediate','senior'],
+    color: '#7a9e7e', bg: 'rgba(122,158,126,0.1)',
+    desc: 'Life sciences, physical sciences, and earth sciences for the Intermediate and Senior Phases.',
+    topics: [
+      { name: 'Life & Living (Biology Basics)', grade: '4–9', desc: 'Living things, habitats, ecosystems, body systems, and life cycles.', learn: ['Classify living and non-living things','Describe habitats and food chains','Identify the main human body systems','Explain life cycles of plants and animals'], resources: ['CAPS Natural Sciences textbooks','Nature walk worksheets','Body systems posters'] },
+      { name: 'Matter & Materials', grade: '4–9', desc: 'Properties of materials, states of matter, and changes in materials.', learn: ['Describe properties of solids, liquids, and gases','Classify materials by their properties','Explain reversible and irreversible changes','Investigate mixtures and separating techniques'], resources: ['CAPS science experiment guides','Lab safety posters','Materials sorting activities'] },
+      { name: 'Energy & Change', grade: '4–9', desc: 'Heat, light, sound, electrical energy, and energy transfer.', learn: ['Identify different forms of energy','Explain how heat transfers by conduction, convection, radiation','Build simple electrical circuits','Describe energy conservation'], resources: ['Circuit kits','Energy transformation diagrams','CAPS practical activities'] },
+      { name: 'Earth & Beyond', grade: '4–9', desc: 'The solar system, rocks, the water cycle, weather, and environmental science.', learn: ['Name the planets and their order from the sun','Explain the water cycle','Identify types of rocks and their formation','Describe weather patterns and climate'], resources: ['Solar system models','Rock sample kits','Weather station data'] }
+    ]
+  },
+  {
+    id: 'phys-sci', name: 'Physical Sciences', icon: '⚛️', phases: ['fet'],
+    color: '#b07adb', bg: 'rgba(176,122,219,0.1)',
+    desc: 'Physics and Chemistry for Grades 10–12, preparing learners for the NSC examination.',
+    topics: [
+      { name: 'Chemical Reactions & Stoichiometry', grade: '10–12', desc: 'Balancing equations, mole concept, and reaction types.', learn: ['Balance chemical equations','Calculate molar mass and moles','Classify reaction types: synthesis, decomposition, displacement','Apply stoichiometric calculations'], resources: ['CAPS Physical Sciences document','Periodic table wall chart','Past NSC Chemistry papers'] },
+      { name: 'Mechanics: Forces & Motion', grade: '10–12', desc: 'Newton\'s laws, momentum, energy, and mechanical systems.', learn: ['Apply Newton\'s three laws of motion','Calculate force, mass, and acceleration','Analyse momentum and impulse in collisions','Solve problems involving work, energy, and power'], resources: ['CAPS Physics modules','Motion experiment kits','NSC mechanics past papers'] },
+      { name: 'Waves, Sound & Light', grade: '10–12', desc: 'Wave properties, sound, electromagnetic spectrum, and optics.', learn: ['Describe wave properties: amplitude, wavelength, frequency','Explain reflection and refraction of light','Analyse the electromagnetic spectrum','Calculate using the wave equation v = fλ'], resources: ['Prism and light experiment kits','Sound wave demonstrations','CAPS wave theory notes'] },
+      { name: 'Organic Chemistry', grade: '10–12', desc: 'Hydrocarbons, functional groups, isomers, and organic reactions.', learn: ['Name and draw hydrocarbons using IUPAC rules','Identify functional groups in organic molecules','Understand addition, substitution, and elimination reactions','Distinguish between saturated and unsaturated compounds'], resources: ['Molecular model kits','CAPS organic chemistry summaries','NSC past exam questions'] },
+      { name: 'Electricity & Magnetism', grade: '10–12', desc: 'Circuits, Ohm\'s law, electromagnetic induction, and generators.', learn: ['Calculate voltage, current, and resistance using Ohm\'s Law','Analyse series and parallel circuits','Explain electromagnetic induction','Describe the operation of motors and generators'], resources: ['Circuit construction kits','CAPS electricity modules','Lab practical guides'] }
+    ]
+  },
+  {
+    id: 'life-sci', name: 'Life Sciences', icon: '🧬', phases: ['fet'],
+    color: '#4a9e6e', bg: 'rgba(74,158,110,0.1)',
+    desc: 'Biology for Grades 10–12 — genetics, evolution, ecology, and human physiology.',
+    topics: [
+      { name: 'Cell Biology & Chemistry of Life', grade: '10–12', desc: 'Cell structure, organelles, cell division, and biological molecules.', learn: ['Draw and label animal and plant cells','Describe the function of each organelle','Explain mitosis and meiosis','Identify carbohydrates, proteins, lipids, and nucleic acids'], resources: ['Microscope lab sessions','Cell model kits','CAPS Life Sciences text'] },
+      { name: 'Genetics & Inheritance', grade: '10–12', desc: 'DNA, genes, chromosomes, Mendelian genetics, and genetic disorders.', learn: ['Explain the structure and function of DNA','Complete monohybrid and dihybrid crosses','Understand dominance, co-dominance, and incomplete dominance','Discuss genetic engineering and ethics'], resources: ['Punnett square worksheets','DNA model activities','CAPS genetics modules'] },
+      { name: 'Evolution & Biodiversity', grade: '10–12', desc: 'Natural selection, evidence for evolution, classification, and speciation.', learn: ['Explain Darwin\'s theory of natural selection','Analyse evidence: fossils, anatomy, molecular biology','Classify organisms using the Linnaean system','Discuss human evolution and biodiversity in South Africa'], resources: ['Fossil and bone cast replicas','SA biodiversity databases','CAPS evolution notes'] },
+      { name: 'Human Physiology', grade: '10–12', desc: 'Nervous system, endocrine system, reproductive system, and homeostasis.', learn: ['Describe the structure of the neuron and nerve impulse transmission','Explain the role of hormones in the endocrine system','Understand the human reproductive system and fertilisation','Analyse homeostatic mechanisms: temperature, blood sugar, water balance'], resources: ['Anatomical models','CAPS physiology worksheets','Diagrams and posters'] }
+    ]
+  },
+  {
+    id: 'geo', name: 'Geography', icon: '🌐', phases: ['senior','fet'],
+    color: '#4a8fa8', bg: 'rgba(74,143,168,0.1)',
+    desc: 'Mapwork, geomorphology, climate, population, and development geography.',
+    topics: [
+      { name: 'Mapwork & Topography', grade: '7–12', desc: 'Reading topographic maps, grid references, bearings, and cross-sections.', learn: ['Use 4-figure and 6-figure grid references','Calculate bearings and distances on maps','Draw cross-sections from contour data','Interpret topographic map symbols and layers'], resources: ['Soweto & Gauteng topographic maps','CAPS mapwork guides','Protractors and rulers'] },
+      { name: 'Geomorphology', grade: '10–12', desc: 'Earthquakes, volcanoes, weathering, erosion, and landforms.', learn: ['Explain plate tectonics and the theory of continental drift','Describe types of weathering and erosion','Identify fluvial, coastal, and aeolian landforms','Analyse the formation of the Drakensberg and Witwatersrand'], resources: ['Geological maps of South Africa','Rock and mineral samples','CAPS geomorphology notes'] },
+      { name: 'Climate & Weather', grade: '10–12', desc: 'Atmospheric processes, climate classification, and South African weather systems.', learn: ['Describe factors affecting climate: latitude, altitude, ocean currents','Classify climates using the Koppen system','Analyse South African rainfall and temperature patterns','Understand synoptic charts and weather prediction'], resources: ['Climate data sets','Weather station observations','CAPS climate modules'] },
+      { name: 'Rural & Urban Settlement', grade: '10–12', desc: 'Settlement patterns, urbanisation, rural challenges, and spatial development.', learn: ['Classify settlement types and patterns','Analyse urbanisation trends in South Africa and Soweto','Evaluate challenges facing rural settlements','Assess spatial development initiatives'], resources: ['Gauteng GIS data','Settlement case studies','CAPS settlement geography'] },
+      { name: 'Development Geography', grade: '10–12', desc: 'Global inequality, development indicators, sustainable development, and trade.', learn: ['Compare development indicators: HDI, GDP per capita, Gini coefficient','Analyse causes and consequences of global inequality','Evaluate sustainable development strategies','Discuss South Africa\'s role in BRICS and global trade'], resources: ['UNDP Human Development Reports','CAPS development geography','Case study booklets'] }
+    ]
+  },
+  {
+    id: 'hist', name: 'History', icon: '🏛️', phases: ['senior','fet'],
+    color: '#c77b4a', bg: 'rgba(199,123,74,0.1)',
+    desc: 'South African, African, and world history — building historical thinking and empathy.',
+    topics: [
+      { name: 'The Cold War', grade: '10', desc: 'Origins, key events, proxy wars, and the end of the Cold War.', learn: ['Explain the ideological conflict between capitalism and communism','Analyse key events: Cuban Missile Crisis, Berlin Wall, Korean War','Evaluate the impact of the Cold War on Africa and the developing world','Assess the reasons for the collapse of the Soviet Union'], resources: ['CAPS Grade 10 History document','Cold War timeline posters','Documentary clips'] },
+      { name: 'Apartheid & Resistance in South Africa', grade: '10–11', desc: 'The rise of apartheid, resistance movements, and the transition to democracy.', learn: ['Explain the key apartheid laws and their impact','Analyse the role of the ANC, PAC, and SACP in the liberation struggle','Evaluate the significance of the Soweto Uprising of 1976','Assess the negotiated transition and the Truth and Reconciliation Commission'], resources: ['Apartheid Museum educational resources','CAPS History modules','Oral history project guides — Soweto focus'] },
+      { name: 'Civil Rights Movements (USA)', grade: '11', desc: 'The African American civil rights movement and its global influence.', learn: ['Describe segregation under Jim Crow laws','Analyse the roles of Martin Luther King Jr., Malcolm X, and Rosa Parks','Compare the US civil rights movement with the anti-apartheid struggle','Evaluate the impact of civil rights legislation'], resources: ['CAPS Grade 11 History document','Primary source analysis worksheets','Film: Selma (discussion guide)'] },
+      { name: 'The Origins of World War I & II', grade: '11–12', desc: 'Causes, key events, turning points, and consequences of both World Wars.', learn: ['Identify the long-term and immediate causes of WWI','Analyse the Treaty of Versailles and its consequences','Explain how the rise of fascism led to WWII','Evaluate the impact of the wars on Africa and South Africa'], resources: ['CAPS World Wars modules','Primary source packs','Timeline activities'] },
+      { name: 'African Empires & Kingdoms', grade: '10–12', desc: 'Great Zimbabwe, the Mali Empire, the Zulu Kingdom, and pre-colonial Africa.', learn: ['Describe the political and economic organisation of Great Zimbabwe','Analyse the role of Mansa Musa and the Mali Empire in trans-Saharan trade','Explain the rise of the Zulu Kingdom under Shaka','Evaluate the impact of colonialism on African civilisations'], resources: ['CAPS African History chapters','Archaeological site case studies','Map activities'] }
+    ]
+  },
+  {
+    id: 'bus', name: 'Business Studies', icon: '💼', phases: ['senior','fet'],
+    color: '#d4a843', bg: 'rgba(212,168,67,0.1)',
+    desc: 'Business environments, ventures, roles, operations, and entrepreneurship.',
+    topics: [
+      { name: 'Business Environments', grade: '10–12', desc: 'Micro, market, and macro environments affecting business.', learn: ['Analyse the micro-environment: business vision, mission, and objectives','Explain the market environment: competitors, suppliers, customers','Evaluate the macro-environment: PESTLE factors','Assess the impact of legislation on businesses in South Africa'], resources: ['CAPS Business Studies document','Business environment case studies','SA business news articles'] },
+      { name: 'Entrepreneurship & Business Ventures', grade: '10–12', desc: 'Starting a business, feasibility studies, business plans, and innovation.', learn: ['Identify qualities of successful entrepreneurs','Conduct a feasibility study for a business idea','Write a comprehensive business plan','Evaluate social entrepreneurship as a career path'], resources: ['Business plan templates','Soweto small business case studies','CAPS entrepreneurship modules'] },
+      { name: 'Business Roles & Human Resources', grade: '10–12', desc: 'Management functions, leadership styles, and human resource management.', learn: ['Describe the four functions of management','Compare leadership styles: autocratic, democratic, laissez-faire','Explain recruitment, selection, and training processes','Analyse labour relations and the role of trade unions'], resources: ['CAPS Business Roles chapters','Role-play interview activities','HR policy examples'] },
+      { name: 'Financial Literacy & Accounting Basics', grade: '10–12', desc: 'Basic financial statements, budgeting, and interpreting financial data.', learn: ['Read and interpret income statements and balance sheets','Prepare a basic cash flow forecast','Calculate profit, loss, and break-even','Understand the role of SARS and taxation'], resources: ['FDIC Money Smart concepts adapted for SA','CAPS Business Finance sections','Financial statement templates'] }
+    ]
+  },
+  {
+    id: 'ems', name: 'Economic & Management Sciences', icon: '📈', phases: ['senior'],
+    color: '#8aaf6e', bg: 'rgba(138,175,110,0.1)',
+    desc: 'Introduction to economics, financial literacy, and business for Grades 7–9.',
+    topics: [
+      { name: 'The Economy & Economic Systems', grade: '7–9', desc: 'Basic economic concepts: needs, wants, scarcity, and economic systems.', learn: ['Define needs, wants, and scarcity','Compare market, command, and mixed economic systems','Explain the circular flow of income','Analyse the role of government in the economy'], resources: ['CAPS EMS textbooks','Economic systems comparison charts','Soweto market research activities'] },
+      { name: 'Financial Literacy for Teens', grade: '7–9', desc: 'Budgeting, saving, banking, and responsible financial decisions.', learn: ['Create a personal budget','Open and manage a savings account','Distinguish between needs and wants','Understand the basics of compound interest'], resources: ['FDIC Money Smart for Young People adapted for SA','CAPS EMS financial literacy','Banking simulation activities'] },
+      { name: 'Entrepreneurship Basics', grade: '7–9', desc: 'What is entrepreneurship, types of businesses, and developing a business idea.', learn: ['Define entrepreneurship and identify entrepreneurs in the community','Distinguish between different types of business ownership','Develop a business idea for a school market day','Understand the risks and rewards of entrepreneurship'], resources: ['CAPS EMS entrepreneurship section','School market day project guides','Soweto entrepreneur profiles'] }
+    ]
+  },
+  {
+    id: 'tech', name: 'Technology', icon: '⚙️', phases: ['intermediate','senior'],
+    color: '#6e8aaf', bg: 'rgba(110,138,175,0.1)',
+    desc: 'Design process, structures, systems, and processing for Grades 4–9.',
+    topics: [
+      { name: 'The Design Process', grade: '4–9', desc: 'Investigating, designing, making, evaluating, and communicating solutions.', learn: ['Identify a problem or need','Research and brainstorm design solutions','Create prototypes and models','Test and evaluate the design against specifications'], resources: ['CAPS Technology document','Design process posters','Recycled material building kits'] },
+      { name: 'Structures', grade: '4–9', desc: 'Man-made and natural structures, strength, stability, and materials.', learn: ['Identify structural forms: frame, shell, solid','Test the strength of different structural shapes','Analyse forces acting on structures','Design and build a bridge or tower'], resources: ['Bridge building kits','Structural analysis worksheets','CAPS Technology structures'] },
+      { name: 'Systems & Control', grade: '7–9', desc: 'Electrical, electronic, pneumatic, and mechanical systems.', learn: ['Build simple electrical and electronic circuits','Design and construct pneumatic systems','Understand input-process-output in systems','Create flow diagrams and control diagrams'], resources: ['Electronic component kits','Pneumatic model kits','CAPS systems and control modules'] },
+      { name: 'Processing', grade: '4–9', desc: 'Processing materials — food, textiles, and other materials.', learn: ['Apply processing techniques to food and textile materials','Use tools safely and correctly','Follow a recipe or pattern accurately','Evaluate the quality of processed products'], resources: ['Sewing and textile tools','Food processing ingredients and equipment','CAPS processing guidelines'] }
+    ]
+  },
+  {
+    id: 'life-orient', name: 'Life Orientation', icon: '🌱', phases: ['foundation','intermediate','senior','fet'],
+    color: '#d94f6f', bg: 'rgba(217,79,111,0.1)',
+    desc: 'Personal well-being, social responsibility, career guidance, and physical education.',
+    topics: [
+      { name: 'Personal Well-being & Self-awareness', grade: 'R–12', desc: 'Self-esteem, emotions, healthy relationships, and personal responsibility.', learn: ['Identify and manage personal emotions','Build healthy relationships and set boundaries','Understand the importance of self-care and mental health','Develop strategies for dealing with peer pressure'], resources: ['CAPS Life Orientation guidelines','Counselling support contacts','Well-being journals'] },
+      { name: 'Health & Hygiene', grade: 'R–12', desc: 'Nutrition, exercise, disease prevention, and hygiene practices.', learn: ['Plan a balanced diet using the food pyramid','Describe the benefits of regular exercise','Explain how diseases spread and how to prevent them','Practice proper hygiene and sanitation'], resources: ['CAPS Health Education modules','Nutrition charts','Disease prevention posters'] },
+      { name: 'Career Guidance & Study Skills', grade: '7–12', desc: 'Exploring careers, subject choices, study methods, and exam preparation.', learn: ['Research career paths and required qualifications','Make informed subject choices for Grade 10','Develop effective study techniques and time management','Prepare for assessments and examinations'], resources: ['Career interest assessments','University prospectuses','Study skills workshops'] },
+      { name: 'Democracy & Human Rights', grade: '7–12', desc: 'The Constitution, Bill of Rights, civic responsibility, and social justice.', learn: ['Explain the structure of South Africa\'s government','Describe the rights in the Bill of Rights','Discuss civic responsibility and active citizenship','Analyse social justice issues in the community'], resources: ['Constitution of South Africa — simplified versions','Mock election activities','CAPS Democracy modules'] }
+    ]
+  },
+  {
+    id: 'creative-arts', name: 'Creative Arts', icon: '🎨', phases: ['intermediate','senior'],
+    color: '#c46eb5', bg: 'rgba(196,110,181,0.1)',
+    desc: 'Visual arts, music, drama, and dance for creative expression and cultural understanding.',
+    topics: [
+      { name: 'Visual Arts: Drawing & Painting', grade: '4–9', desc: 'Exploring drawing techniques, painting, colour theory, and composition.', learn: ['Apply shading and perspective techniques in drawing','Mix colours using primary, secondary, and tertiary colour theory','Create artwork using different media: pencil, paint, charcoal','Analyse and critique artworks'], resources: ['Art supply kits','CAPS Creative Arts Visual Arts','Soweto art gallery virtual tours'] },
+      { name: 'Music: Singing, Instruments & Theory', grade: '4–9', desc: 'Singing, playing instruments, reading music, and understanding music genres.', learn: ['Read basic musical notation: notes, rests, time signatures','Sing in groups and individually','Play simple percussion and melodic instruments','Explore South African music genres: maskandi, kwaito, gospel'], resources: ['Orff instruments','CAPS music curriculum','SA music listening guides'] },
+      { name: 'Drama & Performance', grade: '4–9', desc: 'Scripting, improvisation, acting techniques, and stagecraft.', learn: ['Develop a short drama script','Use voice, body, and gesture in performance','Improvisation and role-play techniques','Understand basic stagecraft and set design'], resources: ['Drama scripts and scenarios','Costume and prop materials','CAPS drama guidelines'] },
+      { name: 'Dance & Movement', grade: '4–9', desc: 'Dance styles, choreography, rhythm, and cultural dance forms.', learn: ['Perform basic dance sequences','Create simple choreography','Explore traditional South African dance forms','Understand rhythm and movement coordination'], resources: ['Dance music playlists','CAPS dance curriculum','Traditional dance video resources'] }
+    ]
+  }
+];
+
+// ===== AUTH LOGIC =====
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+  document.querySelector(`.auth-tab[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById(tab === 'login' ? 'loginForm' : 'signupForm').classList.add('active');
+}
+
+function handleAuth(e, type) {
+  e.preventDefault();
+  const overlay = document.getElementById('authOverlay');
+  const app = document.getElementById('mainApp');
+  overlay.classList.add('hidden');
+  app.classList.add('visible');
+  renderSubjects('all');
+}
+
+function logout() {
+  const overlay = document.getElementById('authOverlay');
+  const app = document.getElementById('mainApp');
+  app.classList.remove('visible');
+  overlay.classList.remove('hidden');
+  switchAuthTab('login');
+}
+
+// ===== RENDER SUBJECTS =====
+function renderSubjects(phase) {
+  const grid = document.getElementById('subjectGrid');
+  const filtered = phase === 'all' ? subjects : subjects.filter(s => s.phases.includes(phase));
+  grid.innerHTML = '';
+  filtered.forEach(sub => {
+    const card = document.createElement('div');
+    card.className = 'subject-card';
+    card.style.setProperty('--card-accent', sub.color);
+    card.style.setProperty('--icon-bg', sub.bg);
+    card.innerHTML = `
+      <span class="card-count">${sub.topics.length} topics</span>
+      <div class="card-icon" style="background:${sub.bg}">${sub.icon}</div>
+      <h3 class="card-title">${sub.name}</h3>
+      <p class="card-desc">${sub.desc}</p>
+      <div class="card-topics">
+        ${sub.topics.slice(0, 4).map(t => `<span class="topic-tag" onclick="event.stopPropagation(); openTopic('${sub.id}','${t.name.replace(/'/g,"\\'")}')">${t.name}</span>`).join('')}
+        ${sub.topics.length > 4 ? `<span class="topic-tag">+${sub.topics.length - 4} more</span>` : ''}
+      </div>
+    `;
+    card.onclick = () => openSubject(sub.id);
+    grid.appendChild(card);
+  });
+}
+
+function filterByGrade(phase, btn) {
+  document.querySelectorAll('.grade-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderSubjects(phase);
+}
+
+// ===== SEARCH =====
+function getAllTopics() {
+  const all = [];
+  subjects.forEach(sub => {
+    sub.topics.forEach(t => {
+      all.push({ subject: sub, topic: t });
+    });
+  });
+  return all;
+}
+
+function handleSearch(query) {
+  const dd = document.getElementById('searchDropdown');
+  if (!query.trim()) { dd.classList.remove('open'); return; }
+  const q = query.toLowerCase();
+  const results = getAllTopics().filter(item =>
+    item.topic.name.toLowerCase().includes(q) ||
+    item.topic.desc.toLowerCase().includes(q) ||
+    item.subject.name.toLowerCase().includes(q) ||
+    item.topic.learn.some(l => l.toLowerCase().includes(q))
+  ).slice(0, 8);
+
+  if (results.length === 0) {
+    dd.innerHTML = '<div style="padding:20px 24px;color:var(--text-dim);font-size:13px;">No topics found. Try a different search term.</div>';
+  } else {
+    dd.innerHTML = results.map(r => `
+      <div class="search-result-item" onclick="openTopic('${r.subject.id}','${r.topic.name.replace(/'/g,"\\'")}')">
+        <div class="sr-icon" style="background:${r.subject.bg}">${r.subject.icon}</div>
+        <div class="sr-text">
+          <div class="sr-title">${highlightMatch(r.topic.name, query)}</div>
+          <div class="sr-meta">${r.subject.name} &middot; Grade ${r.topic.grade}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+  dd.classList.add('open');
+}
+
+function highlightMatch(text, query) {
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return text.replace(regex, '<strong style="color:var(--accent)">$1</strong>');
+}
+
+function closeSearch() {
+  document.getElementById('searchDropdown').classList.remove('open');
+}
+
+// ===== MODAL =====
+function openTopic(subjectId, topicName) {
+  const sub = subjects.find(s => s.id === subjectId);
+  const topic = sub.topics.find(t => t.name === topicName);
+  if (!sub || !topic) return;
+  document.getElementById('modalSubject').textContent = sub.name;
+  document.getElementById('modalTitle').textContent = topic.name;
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    <div>
+      <div class="modal-section-title">About This Topic</div>
+      <p class="modal-text">${topic.desc}</p>
+      <p class="modal-text" style="margin-top:6px;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);letter-spacing:0.05em;">GRADES: ${topic.grade}</p>
+    </div>
+    <div>
+      <div class="modal-section-title">What You'll Learn</div>
+      <ul class="modal-learn-list">
+        ${topic.learn.map(l => `<li>${l}</li>`).join('')}
+      </ul>
+    </div>
+    <div>
+      <div class="modal-section-title">Resources</div>
+      <div class="modal-resources">
+        ${topic.resources.map(r => `<button class="modal-resource-btn">${r}</button>`).join('')}
+      </div>
+    </div>
+  `;
+  document.getElementById('topicModal').classList.add('open');
+}
+
+function openSubject(subjectId) {
+  const sub = subjects.find(s => s.id === subjectId);
+  if (!sub) return;
+  // Open first topic as representative
+  if (sub.topics.length > 0) openTopic(subjectId, sub.topics[0].name);
+}
+
+function closeModal() {
+  document.getElementById('topicModal').classList.remove('open');
+}
+
+document.getElementById('topicModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ===== NAV =====
+function scrollToSection(id) {
+  document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  renderSubjects('all');
+});
+</script>
+</body>
+  </html>
